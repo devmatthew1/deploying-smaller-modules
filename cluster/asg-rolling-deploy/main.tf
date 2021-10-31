@@ -1,4 +1,6 @@
-
+terraform {
+  required_version = ">= 0.14.9"
+}
 resource "aws_launch_configuration" "example" {
   image_id = var.ami
   instance_type = var.instance_type

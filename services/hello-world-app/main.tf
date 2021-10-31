@@ -1,3 +1,6 @@
+terraform {
+  required_version = ">= 0.14.9"
+}
 
 module "asg" {
   source = "../../cluster/asg-rolling-deploy"
