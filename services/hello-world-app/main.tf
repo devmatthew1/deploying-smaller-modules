@@ -1,3 +1,4 @@
+
 module "asg" {
   source = "../../cluster/asg-rolling-deploy"
 
@@ -10,7 +11,7 @@ module "asg" {
   max_size           = var.max_size
   enable_autoscaling = var.enable_autoscaling
 
-  subnet_ids        = data.aws_subnet_ids.default.ids
+  subnet_ids        = local.subnet_ids
   target_group_arns = [aws_lb_target_group.asg.arn]
   health_check_type = "ELB"
   
@@ -21,29 +22,25 @@ module "alb" {
   source = "../../networking/alb"
 
   alb_name   = "hello-world-${var.environment}"
-  subnet_ids = data.aws_subnet_ids.default.ids
+  subnet_ids = local.subnet_ids
 }
-
 
 data "template_file" "user_data" {
   template = file("${path.module}/user-data.sh")
 
   vars = {
     server_port = var.server_port
-    db_address  = data.terraform_remote_state.db.outputs.address
-    db_port     = data.terraform_remote_state.db.outputs.port
-
-    #just add server_text as input
+    db_address  = local.mysql_config.address
+    db_port     = local.mysql_config.port
     server_text = var.server_text
   }
 }
-
 
 resource "aws_lb_target_group" "asg" {
   name     = "hello-world-${var.environment}"
   port     = var.server_port
   protocol = "HTTP"
-  vpc_id   = data.aws_vpc.default.id
+  vpc_id   = local.vpc_id
 
   health_check {
     path                = "/"
@@ -71,9 +68,3 @@ resource "aws_lb_listener_rule" "asg" {
     target_group_arn = aws_lb_target_group.asg.arn
   }
 }
-
-
-
-
-
-
